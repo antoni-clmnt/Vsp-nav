@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VSP NAV</title>
+
+  <!-- Feuille de style Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+    #controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      background: white;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    }
+    button {
+      display: block;
+      margin-bottom: 5px;
+      width: 150px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="controls">
+    <button id="locateBtn">Centrer sur moi</button>
+    <button id="obstacleBtn">Signaler obstacle</button>
+  </div>
+
+  <div id="map"></div>
+
+  <!-- Script Leaflet -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <script>
+    // Création de la carte
+    const map = L.map('map').setView([48.8566, 2.3522], 13);
+
+    // Chargement des tuiles de carte OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Marqueur utilisateur
+    let userMarker = null;
+
+    // Fonction pour centrer sur la position
+    function locateUser() {
+      if (!navigator.geolocation) {
+        alert('La géolocalisation n’est pas disponible.');
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(pos => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+
+        if (userMarker) {
+          userMarker.setLatLng([lat, lon]);
+        } else {
+          userMarker = L.marker([lat, lon]).addTo(map)
+            .bindPopup("Tu es ici !");
+        }
+
+        map.setView([lat, lon], 15);
+      }, err => {
+        alert('Impossible de te localiser 😥');
+      });
+    }
+
+    // Boutons
+    document.getElementById('locateBtn').addEventListener('click', locateUser);
+
+    document.getElementById('obstacleBtn').addEventListener('click', () => {
+      if (!userMarker) {
+        alert("Appuie d'abord sur 'Centrer sur moi' pour te localiser !");
+        return;
+      }
+      const latlng = userMarker.getLatLng();
+      L.marker(latlng, {icon: L.icon({
+        iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+        iconSize: [30, 30]
+      })}).addTo(map)
+        .bindPopup("🚧 Obstacle signalé ici !");
+    });
+  </script>
+</body>
+</html>
